@@ -231,30 +231,31 @@ public:
 		// if we have an 'old version', simply upgrade it
 		MCString::iterator version = FindNV("version");
 
-		// oldest version, before any version numbers!
-		// this upgrades to version 1, which changes our key database
-		// this does /not/ delete the old keys however, so people can go right back to the old version
-		if (version == EndNV()) {
-			if (BeginNV() != EndNV()) {  // if we actually have any keys to convert
-				// need to do this since we're adding to NV, and if we don't it loops forever, processing new entries
-				MCString::iterator it = BeginNV();
-				while (it != EndNV()) {
-					it++;
-				}
-				it--;
 
-				CString LastNV = it->first;
+		// oldest version, before any version numbers!
+		if (version == EndNV()) {
+			PutModule("Upgraded Database to Version 1, you need to set your keys again");
+		// if (version == EndNV()) {
+			// if (BeginNV() != EndNV()) {  // if we actually have any keys to convert
+				// // need to do this since we're adding to NV, and if we don't it loops forever, processing new entries
+				// MCString::iterator it = BeginNV();
+				// while (it != EndNV()) {
+					// it++;
+				// }
+				// it--;
+
+				// CString LastNV = it->first;
 
 				// now loop over every key and upgrade
-				for (it = BeginNV(); it->first != LastNV; it++) {
-					SetNV("key " + it->first, it->second);
-					PutModule("key for " + it->first + " upgraded");
-				}
-				SetNV("key " + it->first, it->second);
-				PutModule("key for " + it->first + " upgraded");
+				// for (it = BeginNV(); it->first != LastNV; it++) {
+					// SetNV("key " + it->first, it->second);
+					// PutModule("key for " + it->first + " upgraded");
+				// }
+				// SetNV("key " + it->first, it->second);
+				// PutModule("key for " + it->first + " upgraded");
 
-				PutModule("Upgraded Database to Version 1");
-			}
+				// PutModule("Upgraded Database to Version 1");
+			// }
 
 			SetNV("config prefix_encrypted", "\00312e\003  ");
 			SetNV("config prefix_decrypted", "\00304d\003  ");
