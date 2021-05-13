@@ -235,7 +235,6 @@ public:
 		// oldest version, before any version numbers!
 		if (version == EndNV()) {
 			PutModule("Upgraded Database to Version 1, you need to set your keys again");
-		// if (version == EndNV()) {
 			// if (BeginNV() != EndNV()) {  // if we actually have any keys to convert
 				// // need to do this since we're adding to NV, and if we don't it loops forever, processing new entries
 				// MCString::iterator it = BeginNV();
@@ -330,7 +329,7 @@ public:
 			free(cMsg);
 
 			// relay to other clients
-			vector<CClient*>& vClients = this->m_pNetwork->GetClients();
+			const vector<CClient*>& vClients = this->m_pNetwork->GetClients();
 			for (unsigned int a = 0; a < vClients.size(); a++) {
 				CClient* pClient = vClients[a];
 
@@ -363,7 +362,7 @@ public:
 			free(cMsg);
 
 			// relay to other clients
-			vector<CClient*>& vClients = this->m_pNetwork->GetClients();
+			const vector<CClient*>& vClients = this->m_pNetwork->GetClients();
 			for (unsigned int a = 0; a < vClients.size(); a++) {
 				CClient* pClient = vClients[a];
 
@@ -396,7 +395,7 @@ public:
 			free(cMsg);
 
 			// relay to other clients
-			vector<CClient*>& vClients = this->m_pNetwork->GetClients();
+			const vector<CClient*>& vClients = this->m_pNetwork->GetClients();
 			for (unsigned int a = 0; a < vClients.size(); a++) {
 				CClient* pClient = vClients[a];
 
@@ -704,23 +703,27 @@ private:
 		    return;
 		}
 
-		dh->p=b_prime;
-		dh->g=b_generator;
+		if (b_prime == NULL || b_generator == NULL ||
+		    !DH_set0_pqg(dh, b_prime, NULL, b_generator))
+			return;
+
 
 		if (!DH_generate_key(dh)) {
 		    return;
 		}
 
-		len = BN_num_bytes(dh->priv_key);
+		const BIGNUM *priv_key, *pub_key;
+		DH_get0_key(dh, &pub_key, &priv_key);
+		len = BN_num_bytes(priv_key);
 		a = (unsigned char *)malloc(len);
-		BN_bn2bin(dh->priv_key,a);
+		BN_bn2bin(priv_key,a);
 
 		memset(raw_buf, 0, 200);
 		htob64((char *)a, (char *)raw_buf, len);
 		sPriv_Key = CString((char *)raw_buf);
-		len=BN_num_bytes(dh->pub_key);
+		len=BN_num_bytes(pub_key);
 		b = (unsigned char *)malloc(len);
-		BN_bn2bin(dh->pub_key,b);
+		BN_bn2bin(pub_key,b);
 		memset(raw_buf, 0, 200);
 		htob64((char *)b, (char *)raw_buf, len);
 		sPub_Key = CString((char *)raw_buf);
@@ -751,13 +754,15 @@ private:
 		}
 
 		dh=DH_new();
-		dh->p=b_prime;
-		dh->g=b_generator;
+		if (b_prime == NULL || b_generator == NULL ||
+		    !DH_set0_pqg(dh, b_prime, NULL, b_generator))
+			return false;
+
 
 		memset(raw_buf, 0, 200);
 		len = b64toh((char *)sPriv_Key.c_str(), (char *)raw_buf);
 		b_myPrivkey=BN_bin2bn(raw_buf, len, NULL);
-		dh->priv_key=b_myPrivkey;
+		DH_set0_key(dh, NULL, b_myPrivkey);
 
 		memset(raw_buf, 0, 200);
 		len = b64toh((char *)sOtherPub_Key.c_str(), (char *)raw_buf);
