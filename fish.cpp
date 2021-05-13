@@ -580,9 +580,14 @@ public:
 			CString sName = sCommand.Token(1);
 			CString sValue = sCommand.Token(2, true);
 
-			if (!sValue.empty()) {
-				SetNV("config " + sName.AsLower(), sValue);
-				PutModule("Set config option [" + sName + "] to [" + sValue + "]");
+			if (!sName.empty()) {
+				if (!sValue.empty()) {
+					SetNV("config " + sName.AsLower(), sValue);
+					PutModule("Set config option [" + sName + "] to [" + sValue + "]");
+				} else {
+					SetNV("config " + sName.AsLower(), "");
+					PutModule("Set config option [" + sName + "] to nothing (disabled)");
+				}
 			} else {
 				PutModule("Usage: SetConfig <Name> <Value>");
 			}
@@ -638,7 +643,7 @@ public:
 			Table.AddRow();
 			Table.SetCell("Command", "SetConfig");
 			Table.SetCell("Arguments", "<name> <value>");
-			Table.SetCell("Description", "Set config option <name> to <value>");
+			Table.SetCell("Description", "Set config option <name> to <value>. Set option to empty if no <value> is specified");
 
 			Table.AddRow();
 			Table.SetCell("Command", "ListConfig");
